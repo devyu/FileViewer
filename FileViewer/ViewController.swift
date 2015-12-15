@@ -31,6 +31,17 @@ class ViewController: NSViewController {
     // This tell table view that the view coontroller will become the target for this actions, and then it sets the method that will be called after a double-click.
     tableView.target = self
     tableView.doubleAction = "tableViewDoubleClick:"
+    
+    
+    // Creat the sort descriptions:
+    let descriptionName = NSSortDescriptor(key: Directory.FileOrder.Name.rawValue, ascending: true)
+    let descriptionDate = NSSortDescriptor(key: Directory.FileOrder.Date.rawValue, ascending: true)
+    let descriptionSize = NSSortDescriptor(key: Directory.FileOrder.Size.rawValue, ascending: true)
+    
+    // Add the sort description for the every colum by setting its 'sortDescriptorPrototype'
+    tableView.tableColumns[0].sortDescriptorPrototype = descriptionName
+    tableView.tableColumns[1].sortDescriptorPrototype = descriptionDate
+    tableView.tableColumns[2].sortDescriptorPrototype = descriptionSize
   }
   
   override var representedObject: AnyObject? {
@@ -81,14 +92,32 @@ class ViewController: NSViewController {
 
 
 
-// MARK: NSTableViewDataSource & NSTableViewDelegate
+// MARK: NSTableViewDataSource
 extension ViewController: NSTableViewDataSource {
+  
   func numberOfRowsInTableView(tableView: NSTableView) -> Int {
     return directoryItems?.count ?? 0
   }
+  
+  // MARK: When the user clicks on any column header, the table view will call the data source
+  func tableView(tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
+    
+    // 1. Retrieves the first sort descriptor that corresponds to the column header clicked by the user.
+    guard let sortDescriptor = tableView.sortDescriptors.first else { return }
+    
+    if let order = Directory.FileOrder(rawValue: sortDescriptor.key!) {
+      // 2. Assigns the 'sortOrder' and 'sortAscending' propertis of the view controller, and tell table view reload the data
+      sortOrder = order
+      sortAscending = sortDescriptor.ascending
+      
+      reloadFileList()
+    }
+    
+    reloadFileList()
+  }
 }
 
-
+// MARK: NSTableViewDelegate
 extension ViewController: NSTableViewDelegate {
   func tableView(tableView: NSTableView, viewForTableColumn tableColumn: NSTableColumn?, row: Int) -> NSView? {
     var image: NSImage?
